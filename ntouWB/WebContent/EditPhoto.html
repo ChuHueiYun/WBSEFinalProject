@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<script src="js/ex.js"></script>
+		<script src="https://code.createjs.com/easeljs-0.8.2.min.js"></script>
+		<script src="js/Slider.js"></script>
+		<style>
+
+
+		</style>		
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+
+		<script type="text/javascript">
+			$(document).ready(function(){	
+				$.ajax({
+					type: "POST",
+					url: "http://localhost:8080/ntouWB/LoginServlet",	 
+					data: { option : "getMemberID" },
+					dataType: "text",
+														
+					success : function(response){
+						if(response == "null"){
+							window.location.href='Login.html';
+						}
+					},
+					error : function(){
+						console.log("server沒有回應");
+					}
+				});	
+			});
+		</script>
+
+		
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="row">
+						<div class="col-md-12">
+						<center><div>
+							<input type='text' class='form-control' style='width:60%;display:inline;vertical-align:middle;' id='name'placeholder='請輸入相片描述'>&nbsp;&nbsp;
+							<input type='date' class='form-control' style='width:20%;display:inline;vertical-align:middle;' id='dateTime'placeholder='請選擇日期'>&nbsp;&nbsp;						
+							<button type="button" class="btn btn-darkBlue" style="display:inline;vertical-align:middle;" onclick="savePic()">儲存</button>
+							<button type="button" class="btn" style="display:inline;vertical-align:middle;" onclick="deletePic()">刪除</button>
+						</center><div>
+						</div>
+					</div>
+					
+					<div class="row">
+						<div class="col-md-12" style="margin:10px">
+								<center><div>
+									<canvas id="view" width="596" height="370"></canvas>
+								</div></center>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+
+	<script>
+		var url = window.location.href;
+		var temp1 = url.split("?");
+		var temp2 = temp1[1].split("=");
+		var pictureID = temp2[1];
+
+		var img;
+		var stage;
+		var bmp;
+		var sliders = {};
+		var colorMatrix;
+		var blurFilter;
+
+		$(document).ready(function() {
+			$.ajax({
+				url : "ImageServlet",
+				data : {
+					state : "getPicture",
+					id : pictureID
+				},
+				type: "post",
+				dataType : "json",
+				
+				success : function(response) {
+					$("#name").prop("value",response[0]);
+					$("#dateTime").prop("value",response[1]);
+					init(response[2]);
+				},
+				error : function() {
+					console.log("錯誤訊息");
+				}
+			});	
+		});
+		
+		
+		function init(base64){
+			examples.showDistractor();
+
+			img = new Image();
+			img.onload = handleImageLoad;
+			img.src = base64;
+		
+		}
+		
+		function handleImageLoad() {
+			examples.hideDistractor();
+
+			var canvas = document.getElementById("view");
+
+			stage = new createjs.Stage(canvas);
+			stage.enableMouseOver();
+			stage.mouseMoveOutside = true;
+
+			bmp = new createjs.Bitmap(img);
+			bmp.cache(0, 0, img.width, img.height);
+			stage.addChild(bmp);
+
+			var panel = new createjs.Shape().set({alpha: 0.7});
+			panel.graphics.beginFill("#111").drawRect(0, canvas.height - 125, canvas.width, 125);
+			stage.addChild(panel);
+
+			var sliderNames = ["brightness", "contrast", "hue", "saturation", "blurX", "blurY"];
+			for (var i = 0; i < sliderNames.length; i++) {
+				var name = sliderNames[i];
+				var x = (i / 2 | 0) * 200;
+				var y = i % 2 * 50 + 275;
+
+				var label = new createjs.Text(name, "18px Arial", "white");
+				label.set({textAlign: "right", x: x + 90, y: y});
+
+				var slider = new Slider(0, 1, 95).set({x: x + 95, y: y});
+				sliders[name] = slider;
+				if (i < 4) {
+					slider.value = 0.5;
+				}
+				slider.on("change", handleSliderChange, this);
+
+				stage.addChild(label, slider);
+			}
+
+			colorMatrix = new createjs.ColorMatrix();
+			var colorMatrixFilter = new createjs.ColorMatrixFilter(colorMatrix);
+			blurFilter = new createjs.BlurFilter(0, 0, 2);
+
+			bmp.filters = [colorMatrixFilter, blurFilter];
+			stage.update();
+		
+		}
+
+		function handleSliderChange(evt) {
+			blurFilter.blurX = sliders.blurX.value * 32;
+			blurFilter.blurY = sliders.blurY.value * 32;
+
+			colorMatrix.setColor(
+							sliders.brightness.value * 200 - 100,
+							sliders.contrast.value * 200 - 100,
+							sliders.saturation.value * 200 - 100,
+							sliders.hue.value * 360 - 180);
+
+			bmp.updateCache();
+			stage.update();
+		}
+		function savePic(){
+		
+			if($("#name").val()){
+				$('#name').css('border-color', '');
+				$('#name').css('border-width', '');
+				if($("#dateTime").val()){
+					stage.removeAllChildren();
+					stage.addChild(bmp);
+					stage.update();
+				
+					var canvas = document.getElementById("view");
+					var base64Url = canvas.toDataURL();
+					
+					$.ajax({
+						url : "ImageServlet",
+						data : {
+							state : "editPicture",
+							id : pictureID,
+							pictureName : $("#name").val(),
+							base64 : base64Url,
+							dateTime : $("#dateTime").val()
+						},
+						type: "post",
+						dataType : "json",
+						
+						success : function(response) {
+							location.href="Photo.html";	
+						},
+						error : function() {
+							console.log("錯誤訊息");
+						}
+					});	
+				}else {$("#dateTime").css("border-color", "red");$("#dateTime").css("border-width", "1.5px");}
+			}else {$("#name").css("border-color", "red");$("#name").css("border-width", "1.5px");$('#dateTime').css('border-color', '');$('#dateTime').css('border-width', '');}
+		}
+		
+		function deletePic(){
+			if(confirm("確定刪除？")){
+				$.ajax({
+					url : "ImageServlet",
+					data : {
+						state : "deletePicture",
+						id : pictureID
+					},
+					type: "post",
+					dataType : "json",
+					
+					success : function(response) {
+						location.href="Photo.html";	
+					},
+					error : function() {
+						console.log("錯誤訊息");
+					}
+				});	
+			}
+		}
+	
+
+	</script>
+
+	</body>
+	
+</html>

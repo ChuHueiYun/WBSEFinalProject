@@ -1,0 +1,536 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css" />
+		<!-- 表格排序 -->
+		<script type="text/javascript" src="__jquery.tablesorter/jquery-latest.js"></script>
+		<script type="text/javascript" src="__jquery.tablesorter/jquery.tablesorter.js"></script>
+		<!-- C3.js相關 -->
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.5/d3.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.js"></script>
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.4.10/c3.min.css" rel="stylesheet" />
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;" id="list">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								<span id="listName">陳文欣 的個人數據</span>
+								<div class="btn-group" style="float: right;">
+									<button type="button" class="btn btn-default btn-xs" onclick='changeList("chart");' id="chartButton">圖</button>
+									<button type="button" class="btn btn-default active btn-xs" onclick='changeList("table");' id="tableButton">表</button>
+								</div>
+							</div>
+							<div class="panel-body">
+								<div class="col-md-12">
+									<table id="memberGameRecordList" class="table table-hover tablesorter" style="border-color: #ce5656;">
+										<thead>
+											<tr>
+												<th style="border-color: #ce5656;">場次</th>
+												<th style="border-color: #ce5656;">對手</th>
+												<th style="border-color: #ce5656;">日期</th>
+												<th style="border-color: #ce5656;">二分 進球/出手</th>
+												<th style="border-color: #ce5656;">三分 進球/出手</th>
+												<th style="border-color: #ce5656;">罰球 進球/出手</th>
+												<th style="border-color: #ce5656;">抄截</th>
+												<th style="border-color: #ce5656;">籃板</th>
+												<th style="border-color: #ce5656;">助攻</th>
+												<th style="border-color: #ce5656;">失誤</th>
+												<th style="border-color: #ce5656;">犯規</th>
+												<th style="border-color: #ce5656;">得分</th>
+											</tr>
+										</thead>
+										<tbody id="memberGameRecordTBody"></tbody>
+										<tfoot>
+											<tr>
+												<th style="border-color: #ce5656; border-width: 2px;">平均</th>
+												<th style="border-color: #ce5656; border-width: 2px;"></th>
+												<th style="border-color: #ce5656; border-width: 2px;"></th>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_2P"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_3P"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_FT"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_STL"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_RB"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_AST"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_TO"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_FOUL"></td>
+												<td style="border-color: #ce5656; border-width: 2px;" id="game_point"></td>
+											</tr>
+										</tfoot>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<script>
+			var data;
+			$(document).ready(function() {
+				getMemberGameRecord();
+				/*表格排序*/
+				$("#memberGameRecordList").tablesorter();
+			});
+			/*取得某隊員比賽數據(coach)*/
+			function getMemberGameRecord() {
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getMemberGameRecord"
+					},
+					dataType: "json",
+					success: function(response) {
+						data = response;
+						var game_2PM = 0;
+						var game_2PA = 0;
+						var game_3PM = 0;
+						var game_3PA = 0;
+						var game_FTM = 0;
+						var game_FTA = 0;
+						var game_STL = 0;
+						var game_RB = 0;
+						var game_AST = 0;
+						var game_TO = 0;
+						var game_FOUL = 0;
+						var game_point = 0;
+						
+						$("#memberGameRecordTBody").empty();
+						for(var i=0; i<response.length; i++) {
+							$("#memberGameRecordTBody").append(
+"											<tr>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].gameID + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].opponent + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].date + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_2PM + " / " + response[i].game_2PA + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_3PM + " / " + response[i].game_3PA + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_FTM + " / " + response[i].game_FTA + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_STL + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_RB + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_AST + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_TO + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_FOUL + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].game_point + "</td>" + "\n" + 
+"											</tr>" + "\n");
+							game_2PM += parseInt(response[i].game_2PM);
+							game_2PA += parseInt(response[i].game_2PA);
+							game_3PM += parseInt(response[i].game_3PM);
+							game_3PA += parseInt(response[i].game_3PA);
+							game_FTM += parseInt(response[i].game_FTM);
+							game_FTA += parseInt(response[i].game_FTA);
+							game_STL += parseInt(response[i].game_STL);
+							game_RB += parseInt(response[i].game_RB);
+							game_AST += parseInt(response[i].game_AST);
+							game_TO += parseInt(response[i].game_TO);
+							game_FOUL += parseInt(response[i].game_FOUL);
+							game_point += parseInt(response[i].game_point);
+						}
+						$("#game_2P").html((game_2PM / response.length).toFixed(2) + " / " + (game_2PA / response.length).toFixed(2));
+						$("#game_3P").html((game_3PM / response.length).toFixed(2) + " / " + (game_3PA / response.length).toFixed(2));
+						$("#game_FT").html((game_FTM / response.length).toFixed(2) + " / " + (game_FTA / response.length).toFixed(2));
+						$("#game_STL").html((game_STL / response.length).toFixed(2));
+						$("#game_RB").html((game_RB / response.length).toFixed(2));
+						$("#game_AST").html((game_AST / response.length).toFixed(2));
+						$("#game_TO").html((game_TO / response.length).toFixed(2));
+						$("#game_FOUL").html((game_FOUL / response.length).toFixed(2));
+						$("#game_point").html((game_point / response.length).toFixed(2));
+						if(response.length == 0) {
+							$("#list > div.panel-body > div").empty();
+							$("#list > div.panel-body > div").append("目前無數據");
+							$("#list > div.panel-heading > div.btn-group").remove();
+						}
+						/*表格排序*/
+						$("#memberGameRecordList").trigger("update");
+					},
+					error: function() {
+						console.log("getMemberGameRecord error\n");
+					}
+				});
+				/*取得某隊員姓名*/
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getMemberName"
+					},
+					dataType: "text",
+					success: function(response) {
+						$("#listName").html(response + " 的個人數據");
+					},
+					error: function() {
+						console.log("getMemberName error\n");
+					}
+				});
+			}
+			/*選圖表*/
+			function changeList(type) {
+				if(type == "chart") {
+					$("#tableButton").removeClass("active");
+					$("#chartButton").addClass("active");
+					$("#list > div.panel-body").empty();
+					$("#list > div.panel-body").append("<div class='col-md-3'></div>");
+					$("#list > div.panel-body > div").append(
+"									<select class='form-control' onchange='lineChartChange()' id='itemSelect'>" + "\n" + 
+"										<option value='game_2P'>二分</option>" + "\n" + 
+"										<option value='game_3P'>三分</option>" + "\n" + 
+"										<option value='game_FT'>罰球</option>" + "\n" + 
+"										<option value='game_STL'>抄截</option>" + "\n" + 
+"										<option value='game_RB'>籃板</option>" + "\n" + 
+"										<option value='game_AST'>助攻</option>" + "\n" + 
+"										<option value='game_TO'>失誤</option>" + "\n" + 
+"										<option value='game_FOUL'>犯規</option>" + "\n" + 
+"										<option value='game_point'>得分</option>" + "\n" + 
+"									</select>" + "\n"
+					);
+					$("#list > div.panel-body > div").css("float", "right");
+					$("#list > div.panel-body > div").css("margin-bottom", "2vh");
+					$("#list > div.panel-body").append(
+"								<div class='col-md-12'>" + "\n" + 
+"									<div id='chart'></div>" + "\n" + 
+"								</div>" + "\n");	
+					var column = [];
+					var game_2PM = ['二分進球'];
+					var game_2PA = ['二分出手'];
+					var game_3PM = ['三分進球'];
+					var game_3PA = ['三分出手'];
+					var game_FTM = ['罰球進球'];
+					var game_FTA = ['罰球出手'];
+					var game_STL = ['抄截'];
+					var game_RB = ['籃板'];
+					var game_AST = ['助攻'];
+					var game_TO = ['失誤'];
+					var game_FOUL = ['犯規'];
+					var game_point = ['得分'];
+					var time = ['x'];
+					for(var i=0; i<data.length; i++) {
+						game_2PM.push(parseInt(data[i].game_2PM));
+						game_2PA.push(parseInt(data[i].game_2PA));
+						game_3PM.push(parseInt(data[i].game_3PM));
+						game_3PA.push(parseInt(data[i].game_3PA));
+						game_FTM.push(parseInt(data[i].game_FTM));
+						game_FTA.push(parseInt(data[i].game_FTA));
+						game_STL.push(parseInt(data[i].game_STL));
+						game_RB.push(parseInt(data[i].game_RB));
+						game_AST.push(parseInt(data[i].game_AST));
+						game_TO.push(parseInt(data[i].game_TO));
+						game_FOUL.push(parseInt(data[i].game_FOUL));
+						game_point.push(parseInt(data[i].game_point));
+						time.push(data[i].date)
+					}
+					column.push(time);
+					column.push(game_2PM);
+					column.push(game_2PA);
+					//console.log(game_2PM + "\n" + game_2PA + "\n" + game_3PM + "\n" + game_3PA + "\n" + game_FTM + "\n" + game_FTA + "\n" + game_STL + "\n" + game_RB + "\n" + game_AST + "\n" + game_TO + "\n" + game_FOUL + "\n" + game_point + "\n" + time);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+				}
+				else {
+					$("#tableButton").addClass("active");
+					$("#chartButton").removeClass("active");
+					$("#list > div.panel-body").empty();
+					$("#list > div.panel-body").append(
+"								<div class='col-md-12'>" + "\n" + 
+"									<table id='memberGameRecordList' class='table table-hover tablesorter' style='border-color: #ce5656;'>" + "\n" + 
+"										<thead>" + "\n" + 
+"											<tr>" + "\n" + 
+"												<th style='border-color: #ce5656;'>場次</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>對手</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>日期</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>二分 進球/出手</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>三分 進球/出手</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>罰球 進球/出手</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>抄截</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>籃板</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>助攻</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>失誤</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>犯規</th>" + "\n" + 
+"												<th style='border-color: #ce5656;'>得分</th>" + "\n" + 
+"											</tr>" + "\n" + 
+"										</thead>" + "\n" + 
+"										<tbody id='memberGameRecordTBody'></tbody>" + "\n" + 
+"										<tfoot>" + "\n" + 
+"											<tr>" + "\n" + 
+"												<th style='border-color: #ce5656; border-width: 2px;'>平均</th>" + "\n" + 
+"												<th style='border-color: #ce5656; border-width: 2px;'></th>" + "\n" + 
+"												<th style='border-color: #ce5656; border-width: 2px;'></th>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_2P'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_3P'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_FT'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_STL'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_RB'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_AST'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_TO'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_FOUL'></td>" + "\n" + 
+"												<td style='border-color: #ce5656; border-width: 2px;' id='game_point'></td>" + "\n" + 
+"											</tr>" + "\n" + 
+"										</tfoot>" + "\n" + 
+"									</table>" + "\n" + 
+"								</div>" + "\n");
+					getMemberGameRecord();
+				}
+			}
+			function lineChartChange() {
+				var column = [];
+				var game_2PM = ['二分進球'];
+				var game_2PA = ['二分出手'];
+				var game_3PM = ['三分進球'];
+				var game_3PA = ['三分出手'];
+				var game_FTM = ['罰球進球'];
+				var game_FTA = ['罰球出手'];
+				var game_STL = ['抄截'];
+				var game_RB = ['籃板'];
+				var game_AST = ['助攻'];
+				var game_TO = ['失誤'];
+				var game_FOUL = ['犯規'];
+				var game_point = ['得分'];
+				var time = ['x'];
+				for(var i=0; i<data.length; i++) {
+					game_2PM.push(parseInt(data[i].game_2PM));
+					game_2PA.push(parseInt(data[i].game_2PA));
+					game_3PM.push(parseInt(data[i].game_3PM));
+					game_3PA.push(parseInt(data[i].game_3PA));
+					game_FTM.push(parseInt(data[i].game_FTM));
+					game_FTA.push(parseInt(data[i].game_FTA));
+					game_STL.push(parseInt(data[i].game_STL));
+					game_RB.push(parseInt(data[i].game_RB));
+					game_AST.push(parseInt(data[i].game_AST));
+					game_TO.push(parseInt(data[i].game_TO));
+					game_FOUL.push(parseInt(data[i].game_FOUL));
+					game_point.push(parseInt(data[i].game_point));
+					time.push(data[i].date)
+				}
+				column.push(time);
+				switch($("#itemSelect").val()) {
+				case "game_2P":
+					column.push(game_2PM);
+					column.push(game_2PA);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_3P":
+					column.push(game_3PM);
+					column.push(game_3PA);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_FT":
+					column.push(game_FTM);
+					column.push(game_FTA);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_STL":
+					column.push(game_STL);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_RB":
+					column.push(game_RB);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_AST":
+					column.push(game_AST);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_TO":
+					column.push(game_TO);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_FOUL":
+					column.push(game_FOUL);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				case "game_point":
+					column.push(game_point);
+					//c3.js chart
+					var chart = c3.generate({
+						bindto: '#chart',
+						data: {
+							x: 'x',
+							xFormat: '%Y-%m-%d',
+							columns: column
+						},
+						axis: {
+							x: {
+								label: '日期',
+								type: 'timeseries',
+								tick: {
+									format: '%Y-%m-%d'
+								}
+							}
+						}
+					});
+					break;
+				}
+			}
+		</script>
+	</body>
+</html>

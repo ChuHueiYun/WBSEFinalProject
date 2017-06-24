@@ -1,0 +1,127 @@
+﻿* {
+	font-family: 微軟正黑體;
+}
+
+/*深藍色按鈕*/
+.btn-darkBlue { 
+  color: #ffffff; 
+  background-color: #2E2D4D; 
+  border-color: #2E2D4D; 
+} 
+ 
+.btn-darkBlue:hover, 
+.btn-darkBlue:focus, 
+.btn-darkBlue:active, 
+.btn-darkBlue.active, 
+.open .dropdown-toggle.btn-darkBlue { 
+  color: #ffffff; 
+  background-color: #42425e; 
+  border-color: #2E2D4D; 
+} 
+ 
+.btn-darkBlue:active, 
+.btn-darkBlue.active, 
+.open .dropdown-toggle.btn-darkBlue { 
+  background-image: none; 
+} 
+ 
+.btn-darkBlue.disabled, 
+.btn-darkBlue[disabled], 
+fieldset[disabled] .btn-darkBlue, 
+.btn-darkBlue.disabled:hover, 
+.btn-darkBlue[disabled]:hover, 
+fieldset[disabled] .btn-darkBlue:hover, 
+.btn-darkBlue.disabled:focus, 
+.btn-darkBlue[disabled]:focus, 
+fieldset[disabled] .btn-darkBlue:focus, 
+.btn-darkBlue.disabled:active, 
+.btn-darkBlue[disabled]:active, 
+fieldset[disabled] .btn-darkBlue:active, 
+.btn-darkBlue.disabled.active, 
+.btn-darkBlue[disabled].active, 
+fieldset[disabled] .btn-darkBlue.active { 
+  background-color: #2E2D4D; 
+  border-color: #2E2D4D; 
+} 
+ 
+.btn-darkBlue .badge { 
+  color: #2E2D4D; 
+  background-color: #ffffff; 
+}
+
+/*棕色menu */
+.navbar-default {
+  background-color: #56494e;
+  border-color: #443a3e;
+}
+.navbar-default .navbar-brand {
+  color: #ffffff;
+}
+.navbar-default .navbar-brand:hover,
+.navbar-default .navbar-brand:focus {
+  color: #ffffff;
+}
+.navbar-default .navbar-text {
+  color: #ffffff;
+}
+.navbar-default .navbar-nav > li > a {
+  color: #ffffff;
+}
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > li > a:focus {
+  color: #ffffff;
+}
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  color: #ffffff;
+  background-color: #443a3e;
+}
+.navbar-default .navbar-nav > .open > a,
+.navbar-default .navbar-nav > .open > a:hover,
+.navbar-default .navbar-nav > .open > a:focus {
+  color: #ffffff;
+  background-color: #443a3e;
+}
+.navbar-default .navbar-toggle {
+  border-color: #443a3e;
+}
+.navbar-default .navbar-toggle:hover,
+.navbar-default .navbar-toggle:focus {
+  background-color: #443a3e;
+}
+.navbar-default .navbar-toggle .icon-bar {
+  background-color: #ffffff;
+}
+.navbar-default .navbar-collapse,
+.navbar-default .navbar-form {
+  border-color: #ffffff;
+}
+.navbar-default .navbar-link {
+  color: #ffffff;
+}
+.navbar-default .navbar-link:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 767px) {
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a {
+    color: #ffffff;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > li > a:focus {
+    color: #ffffff;
+  }
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a,
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a:hover,
+  .navbar-default .navbar-nav .open .dropdown-menu > .active > a:focus {
+    color: #ffffff;
+    background-color: #443a3e;
+  }
+}
+
+.brownList > li > a {
+	padding-left: 10px;
+	padding-right: 10px;
+}
+

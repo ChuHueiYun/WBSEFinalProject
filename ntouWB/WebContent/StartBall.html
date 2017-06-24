@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>NTOUWB</title>
+	<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/frame.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="js/ball_examples.js" type="text/javascript"></script>
+	<script type="text/javascript" src="js/ball_easeljs-NEXT.min.js"></script>
+	<script type="text/javascript" src="js/ball_tweenjs-NEXT.combined.js"></script>
+	<!-- We also provide hosted minified versions of all CreateJS libraries.
+		 http://code.createjs.com -->
+
+	<script>
+		var canvas, stage, image, ball;
+		
+		$(document).ready(function(){
+			init();
+		});
+		
+		function init() {
+			canvas = document.getElementById("canvas");
+			stage = new createjs.Stage("canvas");
+			stage.autoClear = true;
+			var basket = new createjs.Bitmap("img/basket.png"); //載入圖片(籃框)
+			basket.x = 0;
+			basket.y = 30;
+			
+			//畫籃球
+			ball = new createjs.Shape().set({x:35,y:35});
+			ball.graphics.f("#EE7700").drawCircle(0,0,35); //畫圓
+			ball.graphics.setStrokeStyle(1, 'round', 'round');
+			ball.graphics.beginStroke('#000000');
+			ball.graphics.moveTo(0, -34);
+			ball.graphics.lineTo(0, 34); //畫線
+			ball.graphics.moveTo(-25, -24);
+			ball.graphics.quadraticCurveTo(0, 0, -25, 24); //畫曲線
+			ball.graphics.moveTo(25, -24);
+			ball.graphics.quadraticCurveTo(0, 0, 25, 24); //畫曲線
+			ball.graphics.moveTo(-34, -5);
+			ball.graphics.quadraticCurveTo(0, 10, 34, -5); //畫曲線
+			
+			stage.addChild(ball, basket); //加入元素至畫面
+			
+			//彈跳
+			createjs.Tween.get(ball).to({y: canvas.height - ball.y}, 2000, createjs.Ease.bounceOut);
+			createjs.Tween.get(ball).to({x: canvas.width - ball.x, rotation: -330}, 2000, createjs.Ease.quadOut);
+			
+			stage.addEventListener("stagemousedown", handleMouseDown); //滑鼠點擊事件
+			stage.update();
+			
+			createjs.Ticker.addEventListener("tick", stage);
+		}
+		
+		function handleMouseDown(event){
+			//拋物線(上升)
+			createjs.Tween.get(ball).to({y: 40}, 2500, createjs.Ease.quintOut);
+			createjs.Tween.get(ball).to({x: canvas.width / 2 - 80, rotation: 240}, 2000, createjs.Ease.sineOut).call(down);
+		}
+		
+		function down(){
+			var random = Math.floor((Math.random() * 2));
+			if(random == 0){
+				//拋物線(下降), 進球
+				createjs.Tween.get(ball).to({x: 36, rotation: -300}, 3000, createjs.Ease.quintOut);
+				createjs.Tween.get(ball).to({y: canvas.height - ball.y}, 3000, createjs.Ease.bounceOut);
+				$("#enterModal").modal("show");
+			}else if(random == 1){
+				//拋物線(下降), 沒進球
+				//$("#enterModal").modal("hide");
+				createjs.Tween.get(ball).to({x: 130, rotation: -300}, 3000, createjs.Ease.quintOut);
+				createjs.Tween.get(ball).to({y: canvas.height - ball.y}, 3000, createjs.Ease.bounceOut).wait(500).call(init);
+			}
+		}
+	</script>
+</head>
+<body>
+	<center>
+		<h1 style="font-weight: bold; color: #2e2d4d; cursor: pointer;" onclick="javascript:location.href = 'Login.html'" title="由此進入登入頁">NTOU WB</h1>
+	</center>
+	<div>
+		<center>
+			<canvas id="canvas" width="960" height="400" style="background-image: url(img/back.jpg); background-repeat: no-repeat;  background-size: cover;"></canvas>
+		</center>
+	</div>
+	
+	<div id="enterModal" class="modal fade" role="dialog">
+		<div class="modal-dialog modal-sm">
+			<div class="modal-content">
+				<div class="modal-header">
+					<button type="button" class="close" data-dismiss="modal">&times;</button>
+					<h3 class="modal-title">是否要進入登入頁面?</h3>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-darkBlue" data-dismiss="modal" onclick="javascript:location.href = 'Login.html'">是</button>
+					<button type="button" class="btn btn-darkBlue" data-dismiss="modal" onclick="javascript:location.href = 'StartBall.html'">否</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+</body>
+</html>

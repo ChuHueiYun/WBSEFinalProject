@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								隊員列表
+							</div>
+							<div class="panel-body" id="MLList">
+								<div class="list-group"></div>
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<script>
+			$(document).ready(function() {
+				getMemberList();
+			});
+			/*取得隊員列表(coach)*/
+			function getMemberList() {
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getMemberList"
+					},
+					dataType: "json",
+					success: function(response) {
+						$("#MLList").empty();
+						$("#MLList").append("<div class='list-group'></div>");
+						for(var i=0; i<response.length; i++) {
+							if(response[i].identity == "leader") {
+								$("#MLList > div.list-group").append(
+"									<a href='#' class='list-group-item' id='m" + response[i].memberID + "' onclick='clickMemberGameRecord(\"" + response[i].memberID + "\");' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='media'>" + "\n" + 
+"											<div class='media-left media-middle'>" + "\n" + 
+"												<img src='img/woman.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"											</div>" + "\n" + 
+"											<div class='media-body'>" + "\n" + 
+"												<h4 class='media-heading' style='font-weight: bold;'>" + "\n" + 
+"													" + response[i].number + "&nbsp" + response[i].name + 
+"													<span class='label label-default' style='float: right; background-color: #2e2d4d;'>隊長</span>" + "\n" + 
+"												</h4>" + "\n" + 
+"												<p>位置：" + response[i].position + "</p>" + "\n" + 
+"												<p>身高：" + response[i].height + "</p>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</a>" + "\n");
+							}
+							else if(response[i].identity == "general" || response[i].identity == "graduated") {
+								$("#MLList > div.list-group").append(
+"									<a href='#' class='list-group-item' id='m" + response[i].memberID + "' onclick='clickMemberGameRecord(\"" + response[i].memberID + "\");' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='media'>" + "\n" + 
+"											<div class='media-left media-middle'>" + "\n" + 
+"												<img src='img/woman.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"											</div>" + "\n" + 
+"											<div class='media-body'>" + "\n" + 
+"												<h4 class='media-heading' style='font-weight: bold;'>" + response[i].number + "&nbsp" + response[i].name + "</h4>" + "\n" + 
+"												<p>位置：" + response[i].position + "</p>" + "\n" + 
+"												<p>身高：" + response[i].height + "</p>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</a>" + "\n");
+							}
+						}
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log("getMemberList error\n" + xhr.status + "\n" + thrownError);
+					}
+				});
+			}
+			/*點擊隊員列表(coach)*/
+			function clickMemberGameRecord(memberID) {
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "clickMemberGameRecord",
+						clickedMemberID: memberID
+					},
+					dataType: "text",
+					success: function(response) {
+						location.href = "MemberGameRecord.html";
+					},
+					error: function() {
+						console.log("clickMemberGameRecord error\n");
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

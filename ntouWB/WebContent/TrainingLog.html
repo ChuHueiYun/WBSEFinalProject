@@ -1,0 +1,293 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								訓練日誌列表
+								<!-- <div class="btn-group" style="float: right;">
+									<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
+										&nbsp;更多&nbsp;
+										<span class="caret"></span>
+									</button>
+									<ul class="dropdown-menu" role="menu">
+										<li><a href="">新增訓練日誌</a></li>
+									</ul>
+								</div> -->
+								<button type="button" class="btn btn-default btn-xs" id="newTrainingLogButton" style="float: right;" onclick="newTrainingLog();">新增</button>
+							</div>
+							<div class="panel-body" id="MLList">
+								<div class="panel-group" id="TLList"></div>
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		<!-- 新增訓練日誌 modal -->
+		<div id="newTrainingLogModal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">新增訓練日誌</h4>
+					</div>
+					<div class="modal-body">
+						<label>訓練日誌內容</label>
+						<textarea class="form-control" rows="5" id="newTrainingLogContent"></textarea>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-darkBlue" data-dismiss="modal" onclick="sendTrainingLog();">送出</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<script>
+			$(document).ready(function() {
+				checkIdentity();
+			});
+			/*確認身份*/
+			function checkIdentity() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "checkIdentity"
+					},
+					dataType: "text",
+					success: function(response) {
+						if(response == "coach") {
+							$("#newTrainingLogButton").remove();
+							$("#newTrainingLogModal").remove();
+							$("#listHeading").html(
+"								<div class='row'>" + "\n" + 
+"									<div class='col-md-9 col-sm-9 col-xs-6'><span style='vertical-align: middle;'>隊員列表</span></div>" + "\n" + 
+"									<div class='col-md-3 col-sm-3 col-xs-6'>" + "\n" + 
+"										<select class='form-control input-sm' onChange='memberListChange();' id='memberSelect'>" + "\n" + 
+"											<option value='general'>現任隊員</option>" + "\n" + 
+"											<option value='graduated'>畢業隊員</option>" + "\n" + 
+"										</select>" + "\n" + 
+"									</div>" + "\n");
+							getMemberList();
+						}
+						else if(response == "graduated") {
+							updateTrainingLogList();
+							$("#newTrainingLogButton").addClass("disabled");
+							$("#newTrainingLogModal").remove();
+						}
+						else if(response == "general" || response == "leader") {
+							updateTrainingLogList();
+						}
+					},
+					error: function() {
+						console.log("checkIdentity error\n");
+					}
+				});
+			}
+			/*新增訓練日誌(leader, general)*/
+			function newTrainingLog() {
+				$("#newTrainingLogModal").modal("show");
+			}
+			/*新增訓練日誌(leader, general)*/
+			function sendTrainingLog() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "newTrainingLog",
+						newTrainingLogContent: $("#newTrainingLogContent").val()
+					},
+					dataType: "text",
+					success: function(response) {
+						updateTrainingLogList();
+					},
+					error: function() {
+						console.log("sendTrainingLog error\n");
+					}
+				});
+			}
+			/*取得訓練日誌(graduated, leader, general)*/
+			function updateTrainingLogList() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "getTrainingLog"
+					},
+					dataType: "json",
+					success: function(response) {
+						$("#TLList").empty();
+						if(response.length == 0) {
+							$("#TLList").append("目前無訓練日誌");
+						}
+						for(var i=0; i<response.length; i++) {
+							if(response[i].replyer != null) {
+								$("#TLList").append(
+"									<div class='panel panel-default' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='panel-heading' data-toggle='collapse' data-target='#d" + response[i].diaryID + "' style='cursor: pointer; background-color: #F5DDDD;'>" + "\n" + 
+"											<div class='media'>" + "\n" + 
+"												<div class='media-left media-middle'>" + "\n" + 
+"													<img src='img/basketball.png' class='media-object' style='width: 20px;'>" + "\n" + 
+"												</div>" + "\n" + 
+"												<div class='media-body'>" + "\n" + 
+"													<h4 class='media-heading' style='margin: 0;'>" + response[i].date + "</h4>" + "\n" + 
+"												</div>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"										<div id='d" + response[i].diaryID + "' class='panel-collapse collapse'>" + "\n" + 
+"											<div class='panel-body' style='white-space: pre-line'>" + response[i].content + "</div>" + "\n" + 
+"											<hr style='margin: 1vh;' />" + "\n" + 
+"											<div class='panel-footer' style='background-color: white;'>" + "\n" + 
+"												<div class='media'>" + "\n" + 
+"													<div class='media-left'>" + "\n" + 
+"														<img src='img/boss.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"													</div>" + "\n" + 
+"													<div class='media-body'>" + "\n" + 
+"														<h4 class='media-heading' style='font-weight: bold;'>" + response[i].replyerName + "</h4>" + "\n" + 
+"														<h6>" + response[i].replyDate + "</h6>" + "\n" + 
+"														<p style='white-space: pre-line'>" + response[i].reply + "</p>" + "\n" + 
+"													</div>" + "\n" + 
+"												</div>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</div>");
+							}
+							else {
+								$("#TLList").append(
+"									<div class='panel panel-default' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='panel-heading' data-toggle='collapse' data-target='#d" + response[i].diaryID + "' style='cursor: pointer; background-color: #F5DDDD;'>" + "\n" + 
+"											<div class='media'>" + "\n" + 
+"												<div class='media-left media-middle'>" + "\n" + 
+"													<img src='img/basketball.png' class='media-object' style='width: 20px;'>" + "\n" + 
+"												</div>" + "\n" + 
+"												<div class='media-body'>" + "\n" + 
+"													<h4 class='media-heading' style='margin: 0;'>" + response[i].date + "</h4>" + "\n" + 
+"												</div>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"										<div id='d" + response[i].diaryID + "' class='panel-collapse collapse'>" + "\n" + 
+"											<div class='panel-body' style='white-space: pre-line'>" + response[i].content + "</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</div>");
+							}
+						}
+						$("div#TLList > div.panel:first > div.panel-collapse").addClass("in");
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log("getTrainingLog error\n" + xhr.status + "\n" + thrownError);
+					}
+				});
+			}
+			/*取得隊員列表(coach)*/
+			function getMemberList() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "getMemberList"
+					},
+					dataType: "json",
+					success: function(response) {
+						$("#MLList").empty();
+						$("#MLList").append("<div class='list-group'></div>");
+						for(var i=0; i<response.length; i++) {
+							if(response[i].identity == "leader" && $("#memberSelect").val() == "general") {
+								$("#MLList > div.list-group").append(
+"									<a href='#' class='list-group-item' id='m" + response[i].memberID + "' onclick='clickMemberTrainingLog(\"" + response[i].memberID + "\");' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='media'>" + "\n" + 
+"											<div class='media-left media-middle'>" + "\n" + 
+"												<img src='img/woman.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"											</div>" + "\n" + 
+"											<div class='media-body'>" + "\n" + 
+"												<h4 class='media-heading' style='font-weight: bold;'>" + "\n" + 
+"													" + response[i].number + "&nbsp" + response[i].name + "\n" + 
+"													<span class='label label-default' style='float: right; background-color: #2e2d4d;'>隊長</span>" + 
+"												</h4>" + "\n" + 
+"												<p>位置：" + response[i].position + "</p>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</a>" + "\n");
+							}
+							else if(response[i].identity == "general" && $("#memberSelect").val() == "general") {
+								$("#MLList > div.list-group").append(
+"									<a href='#' class='list-group-item' id='m" + response[i].memberID + "' onclick='clickMemberTrainingLog(\"" + response[i].memberID + "\");' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='media'>" + "\n" + 
+"											<div class='media-left media-middle'>" + "\n" + 
+"												<img src='img/woman.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"											</div>" + "\n" + 
+"											<div class='media-body'>" + "\n" + 
+"												<h4 class='media-heading' style='font-weight: bold;'>" + response[i].number + "&nbsp" + response[i].name + "</h4>" + "\n" + 
+"												<p>位置：" + response[i].position + "</p>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</a>" + "\n");
+							}
+							else if(response[i].identity == "graduated" && $("#memberSelect").val() == "graduated") {
+								$("#MLList > div.list-group").append(
+"									<a href='#' class='list-group-item' id='m" + response[i].memberID + "' onclick='clickMemberTrainingLog(\"" + response[i].memberID + "\");' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='media'>" + "\n" + 
+"											<div class='media-left media-middle'>" + "\n" + 
+"												<img src='img/woman.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"											</div>" + "\n" + 
+"											<div class='media-body'>" + "\n" + 
+"												<h4 class='media-heading' style='font-weight: bold;'>" + response[i].number + "&nbsp" + response[i].name + "</h4>" + "\n" + 
+"												<p>位置：" + response[i].position + "</p>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</a>" + "\n");
+							}
+						}
+					},
+					error: function() {
+						console.log("getMemberList error\n");
+					}
+				});
+			}
+			/*隊員列表選單(coach)*/
+			function memberListChange() {
+				getMemberList();
+			}
+			/*點擊隊員列表(coach)*/
+			function clickMemberTrainingLog(memberID) {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "clickMemberTrainingLog",
+						clickedMemberID: memberID
+					},
+					dataType: "text",
+					success: function(response) {
+						location.href = "TrainingLogForCoach.html";
+					},
+					error: function() {
+						console.log("clickMemberTrainingLog error\n");
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,162 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+		<!-- 表格排序 -->
+		<script type="text/javascript" src="__jquery.tablesorter/jquery-latest.js"></script>
+		<script type="text/javascript" src="__jquery.tablesorter/jquery.tablesorter.js"></script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12" id="buttonGroup">
+						<div class="btn-group">
+							<button type="button" class="btn btn-darkBlue active" onclick="location.href='TeamGameRecord.html'">檢視模式</button>
+							<button type="button" class="btn btn-darkBlue" onclick="location.href='EditTeamGameRecord.html'">編輯模式</button>
+						</div>
+					</div>
+					<div class="col-md-12" style="margin-top: 3vh;" id="list">
+						<table class="table table-hover table-bordered" style="border-color: #ce5656;">
+							<thead>
+								<tr>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">場次</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">日期</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">對手</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">比分</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">結果</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td style="border-color: #ce5656;" id="gameID">2</td>
+									<td style="border-color: #ce5656;" id="date">2017-05-31</td>
+									<td style="border-color: #ce5656;" id="opponent">中央大學</td>
+									<td style="border-color: #ce5656;" id="score">50：45</td>
+									<td style="border-color: #ce5656;" id="result">贏</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								本場球員數據
+							</div>
+							<div class="panel-body">
+								<table id="teamGameRecord" class="table table-hover tablesorter" style="border-color: #ce5656;">
+										<thead>
+											<tr>
+												<th style="border-color: #ce5656;">背號</th>
+												<th style="border-color: #ce5656;">姓名</th>
+												<th style="border-color: #ce5656;">位置</th>
+												<th style="border-color: #ce5656;">二分 進球/出手</th>
+												<th style="border-color: #ce5656;">三分 進球/出手</th>
+												<th style="border-color: #ce5656;">罰球 進球/出手</th>
+												<th style="border-color: #ce5656;">抄截</th>
+												<th style="border-color: #ce5656;">籃板</th>
+												<th style="border-color: #ce5656;">助攻</th>
+												<th style="border-color: #ce5656;">失誤</th>
+												<th style="border-color: #ce5656;">犯規</th>
+												<th style="border-color: #ce5656;">得分</th>
+											</tr>
+										</thead>
+										<tbody id="teamGameRecordTBody"></tbody>
+								</table>
+								
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<!-- 表格排序 -->
+		<script>
+			$(document).ready(function() {
+				checkIdentity();
+				getTeamGameRecord();
+				/*表格排序*/
+				$("#teamGameRecord").tablesorter(); 
+			});
+			/*確認身份*/
+			function checkIdentity() {
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "checkIdentity"
+					},
+					dataType: "text",
+					success: function(response) {
+						if(response == "general" || response == "graduated") {
+							$("#buttonGroup").remove();
+							$("#list").css("margin-top", "0");
+						}
+					},
+					error: function() {
+						console.log("checkIdentity error\n");
+					}
+				});
+			}
+			function getTeamGameRecord() {
+				/*取得某場次比賽數據*/
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getTeamGameRecord"
+					},
+					dataType: "json",
+					success: function(response) {
+						$("#gameID").html(response.gameID);
+						$("#date").html(response.date);
+						$("#opponent").html(response.opponent);
+						$("#score").html(response.ourPoint + "：" + response.opponentPoint);
+						$("#result").html(response.result);
+						$("#teamGameRecordTBody").empty();
+						for(var i=0; i<response.MGR.length; i++) {
+							$("#teamGameRecordTBody").append(
+"											<tr>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].number + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].name + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].position + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_2PM + " / " + response.MGR[i].game_2PA + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_3PM + " / " + response.MGR[i].game_3PA + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_FTM + " / " + response.MGR[i].game_FTA + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_STL + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_RB + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_AST + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_TO + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_FOUL + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response.MGR[i].game_point + "</td>" + "\n" + 
+"											</tr>" + "\n");
+						}
+						/*表格排序*/
+						$("#teamGameRecord").trigger("update");
+						//$("#teamGameRecord").trigger("sorton", [ [[0,0]] ]);
+					},
+					error: function() {
+						console.log("getTeamGameRecord error\n");
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

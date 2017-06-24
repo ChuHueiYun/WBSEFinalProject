@@ -1,0 +1,317 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12">
+						<button type="button" class="btn btn-darkBlue btn-sm" style="float: right;" onclick="saveAll();">儲存</button>
+					</div>
+					<div class="col-md-12" style="margin-top: 3vh;">
+						<table class="table table-bordered" style="border-color: #ce5656;">
+							<thead>
+								<tr>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">日期</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">對手</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">比分</th>
+									<th style="border-color: #ce5656; background-color: #ce5656; color: white;">結果</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td style="border-color: #ce5656;">
+										<input type="date" class="form-control" placeholder="比賽日期" id="date" />
+									</td>
+									<td style="border-color: #ce5656;">
+										<input type="text" class="form-control" placeholder="對手" id="opponent" />
+									</td>
+									<td class="form-inline" style="border-color: #ce5656;">
+										<input type="number" min="0" class="form-control" placeholder="海大比分" id="ourPoint" />
+										：
+										<input type="number" min="0" class="form-control" placeholder="對手比分" id="opponentPoint" />
+									</td>
+									<td style="border-color: #ce5656;">
+										<select class="form-control" id="resultSelect">
+											<option>贏</option>
+											<option>輸</option>
+										</select>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								本場球員數據
+							</div>
+							<div class="panel-body">
+								<table class="table" style="border-color: #ce5656;">
+										<thead>
+											<tr>
+												<th class="col-md-2" style="border-color: #ce5656;">姓名</th>
+												<th style="border-color: #ce5656;">二分</th>
+												<th style="border-color: #ce5656;">三分</th>
+												<th style="border-color: #ce5656;">罰球</th>
+												<th style="border-color: #ce5656;">抄截</th>
+												<th style="border-color: #ce5656;">籃板</th>
+												<th style="border-color: #ce5656;">助攻</th>
+												<th style="border-color: #ce5656;">失誤</th>
+												<th style="border-color: #ce5656;">犯規</th>
+												<th style="border-color: #ce5656;"></th>
+											</tr>
+										</thead>
+										<tbody id="teamGameRecordTBody"></tbody>
+								</table>
+								<button type="button" class="btn btn-darkBlue btn-sm" style="float: right;" onclick="newRow();">新增</button>
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		<div id="noticeModal" class="modal fade" role="dialog">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">提醒</h4>
+					</div>
+					<div class="modal-body">
+						<p id="noticeContent">不能以空白儲存<br>請檢查！</p>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-darkBlue" data-dismiss="modal">確定</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<!-- 身份判斷 -->
+		<script>
+			$(document).ready(function() {
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "checkIdentity"
+					},
+					dataType: "text",
+					success: function(response) {
+						if(response == "general" || response == "graduated") {
+							location.href = "GameRecord.html";
+						}
+					},
+					error: function() {
+						console.log("checkIdentity error\n");
+					}
+				});
+			});
+		</script>
+		<script>
+		var rowNumber = 0;
+		var rowCount = 0;
+			$(document).ready(function() {
+				var optionCode = "";
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getMemberList"
+					},
+					dataType: "json",
+					success: function(response) {
+						for(var i=0; i<response.length; i++) {
+							optionCode += "														<option>" + response[i].name + "</option>\n";
+						}
+						$("#teamGameRecordTBody").append(
+"											<tr id='row" + rowNumber + "'>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<select class='form-control' id='nameSelect'>" + "\n" + 
+														optionCode + 
+"													</select>" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='進球' />" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='出手' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='進球' />" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='出手' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='進球' />" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='出手' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='抄截' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='籃板' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='助攻' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='失誤' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='犯規' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<button type='button' class='btn btn-darkBlue btn-sm' style='float: right;' onclick='deleteRow(\"" + rowNumber + "\");'>刪除</button>" + "\n" + 
+"												</td>" + "\n" + 
+"											</tr>" + "\n");
+						rowNumber++;
+						rowCount++;
+					},
+					error: function() {
+						console.log("getMemberList error\n");
+					}
+				});
+			});
+			function newRow() {
+				var optionCode = "";
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getMemberList"
+					},
+					dataType: "json",
+					async: false,
+					success: function(response) {
+						for(var i=0; i<response.length; i++) {
+							optionCode += "														<option>" + response[i].name + "</option>\n";
+						}
+					},
+					error: function() {
+						console.log("getMemberList error\n");
+					}
+				});
+				$("#teamGameRecordTBody").append(
+"											<tr id='row" + rowNumber + "'>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<select class='form-control' id='nameSelect'>" + "\n" + 
+														optionCode + 
+"													</select>" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='進球' />" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='出手' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='進球' />" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='出手' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='進球' />" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' style='margin-bottom: 1vh;' placeholder='出手' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='抄截' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='籃板' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='助攻' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='失誤' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<input type='number' min='0' class='form-control input-sm' placeholder='犯規' />" + "\n" + 
+"												</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + "\n" + 
+"													<button type='button' class='btn btn-darkBlue btn-sm' style='float: right;' onclick='deleteRow(\"" + rowNumber + "\");'>刪除</button>" + "\n" + 
+"												</td>" + "\n" + 
+"											</tr>"
+				);
+				rowNumber++;
+				rowCount++;
+			}
+			/*刪除row*/
+			function deleteRow(number) {
+				$("#row" + number).remove();
+				rowCount--;
+			}
+			/*儲存全部*/
+			function saveAll() {
+				if(!checkBeforeSave()) return;
+				var gameRecordData = "{\"date\":\"" + $("#date").val() + "\",\"opponent\":\"" + $("#opponent").val() + "\",\"score\":\"" + $("#ourPoint").val() + ":"+ $("#opponentPoint").val() + "\",\"result\":\"" + $('#resultSelect :selected').text() + "\",\"MGR\":[";
+				for(var i=0; i<rowCount; i++) {
+					var temp = "{";
+					temp += "\"name\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(0) > #nameSelect :selected").text() + "\",";
+					temp += "\"game_2PM\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(1) > input:first").val() + "\",";
+					temp += "\"game_2PA\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(1) > input:last").val() + "\",";
+					temp += "\"game_3PM\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(2) > input:first").val() + "\",";
+					temp += "\"game_3PA\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(2) > input:last").val() + "\",";
+					temp += "\"game_FTM\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(3) > input:first").val() + "\",";
+					temp += "\"game_FTA\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(3) > input:last").val() + "\",";
+					temp += "\"game_STL\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(4) > input:last").val() + "\",";
+					temp += "\"game_RB\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(5) > input:last").val() + "\",";
+					temp += "\"game_AST\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(6) > input:last").val() + "\",";
+					temp += "\"game_TO\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(7) > input:last").val() + "\",";
+					temp += "\"game_FOUL\":\"" + $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(8) > input:last").val() + "\"}";
+					if(i == 0) {
+						gameRecordData += temp;
+					}
+					else {
+						gameRecordData += "," + temp;
+					}
+				}
+				gameRecordData += "]}";
+				console.log(gameRecordData);
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "addGameRecord",
+						gameRecordData: gameRecordData
+					},
+					dataType: "text",
+					success: function(response) {
+						location.href = "TeamGameRecordList.html";
+					},
+					error: function() {
+						console.log("saveAll error\n");
+					}
+				});
+			}
+			/*檢查空白*/
+			function checkBeforeSave() {
+				for(var i=0; i<rowCount; i++) {
+					if($("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(1) > input:first").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(1) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(2) > input:first").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(2) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(3) > input:first").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(3) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(4) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(5) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(6) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(7) > input:last").val() == "" || $("#teamGameRecordTBody > tr:eq(" + i + ") > td:eq(8) > input:last").val() == "") {
+						$("#noticeModal").modal("show");
+						return false;
+					}
+				}
+				if($("#date").val() == "" || $("#opponent").val() == "" || $("#ourPoint").val() == "" || $("#opponentPoint").val() == "") {
+					$("#noticeModal").modal("show");
+					return false;
+				}
+				else return true;
+			}
+		</script>
+	</body>
+</html>

@@ -1,0 +1,422 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+		<style type="text/css">
+			.table-fixed thead {
+			}
+
+			.table-fixed tbody {			
+  				height: 50vh;
+  				overflow-y: auto;
+  				width: 100%;
+			}
+
+			.table-fixed thead, .table-fixed tbody, .table-fixed tr, .table-fixed td, .table-fixed th {
+  				display: block;
+			}
+
+			.table-fixed tbody td, .table-fixed thead > tr> th {
+			  	float: left;
+			  	border-bottom-width: 0;
+			}
+		</style>
+
+		<script>
+			var account = [];
+			var memberName = [];
+			var height = [];
+			var number = [];
+			var position = [];
+			var identity = [];
+			var selectAccount = "";
+			
+			$(document).ready(function(){
+				//檢查登入
+				$.ajax({
+					type: "POST",
+					url: "LoginServlet",	 
+					data: { option : "getMemberID" },
+					dataType: "text",
+														
+					success : function(response){
+						if(response == "null"){
+							window.location.href='Login.html';
+						}
+						else{
+							getIdentity();
+						}
+					},
+					error : function(){
+						console.log("server沒有回應");
+					}
+				});						
+			});
+
+
+			//檢查身份
+			function getIdentity(){
+				$.ajax({
+					type: "POST",
+					url: "LoginServlet",	 
+					data: { option : "getIdentity" },
+					dataType: "text",
+																		
+					success : function(response){
+						if(response=="coach"||response=="leader"){
+							getMemberList();
+						}
+						else{
+							window.location.href='Homepage.html';
+						}
+					},
+					error : function(){
+						console.log("server沒有回應");
+					}
+				});	
+			}
+
+			//顯示隊員列表
+			function getMemberList(){
+				$("#memberListHead").empty();
+				$("#memberList").empty();
+
+				$.ajax({
+				type: "post",
+				url: "MemberManagementServlet",
+				data: {option: "getMemberList"},
+				dataType: "json",
+												
+				success : function(response){
+					var jsonString = "";
+					var listLength = response.length;
+					var item = "";
+					var identityString = "";
+
+					if(listLength==0){
+						$("#memberList").append("<h4 align='center'>尚無隊員資料</h4>");
+					}
+					else{
+						$("#memberListHead").append(
+							"<tr>"+
+					            "<th class='col-md-2 col-xs-2' style='text-align: center;'>姓名</th>"+
+								"<th class='col-md-2 col-xs-2' style='text-align: center;'>位置</th>"+
+								"<th class='col-md-2 col-xs-2' style='text-align: center;'>身高</th>"+
+								"<th class='col-md-1 col-xs-1' style='text-align: center;''>背號</th>"+
+								"<th class='col-md-2 col-xs-2' style='text-align: center;'>身份</th>"+
+								"<th class='col-md-3 col-xs-3' style=''>帳號</th>"+
+					         "</tr>");
+
+						for(var i = 0; i<listLength; i++){ 	
+							jsonString += "account:" +response[i]["account"]+"\n" + "name:" +response[i]["name"]+"\n"
+										+ "height:" +response[i]["height"]+"\n" + "number:" +response[i]["number"]+"\n"
+										+ "position:" +response[i]["position"]+"\n" + "identity:" +response[i]["identity"]+"\n";
+						
+							memberName[i] = response[i]["name"];
+							position[i] = response[i]["position"];
+							height[i] = response[i]["height"];
+							number[i] = response[i]["number"];
+							identity[i] = response[i]["identity"];
+							account[i] = response[i]["account"];
+							
+							if(position[i]==""||position[i]==null){
+								position[i]="尚未設定";
+							}
+
+							if(height[i]==0||height[i]==null){
+								height[i]="尚未設定";
+							}
+
+							if(identity[i]=="leader"){
+								identityString="隊長";
+							}
+							else if(identity[i]=="general"){
+								identityString="一般";
+							}
+							else if(identity[i]=="graduated"){
+								identityString="畢業生";
+							}
+
+							$("#memberList").append(
+								"<tr>" +
+									"<td class='col-md-2 col-xs-2' style='border-color: #ce5656;text-align: center;'>"+memberName[i]+"</td>" +
+									"<td class='col-md-2 col-xs-2' style='border-color: #ce5656;text-align: center;'>"+position[i]+"</td>" +
+									"<td class='col-md-2 col-xs-2' style='border-color: #ce5656;text-align: center;'>"+height[i]+"</td>" +
+									"<td class='col-md-1 col-xs-1' style='border-color: #ce5656;text-align: center;'>"+number[i]+"</td>" +
+									"<td class='col-md-2 col-xs-2' style='border-color: #ce5656;text-align: center;'>"+identityString+
+									"<a href='#' style='margin-left:1vh;' onclick='changeIdentity("+i+");'><img src='img/edit.png'></a>"+
+									"</td>" +
+									"<td class='col-md-3 col-xs-3' style='border-color: #ce5656;'>" +account[i]+
+										"<button type='button' class='btn btn-default btn-xs' id='' style='float: right;' onclick='deleteMember("+i+");'>刪除</button>" +
+									"</td>" +
+					          	"</tr>");
+						}				
+						
+					}
+					//alert(jsonString);
+				},
+		 
+				error : function(){
+					console.log("server沒有回應");
+				}
+				});
+			}
+
+
+			//顯示加入隊員的Modal
+			function addMember() {
+				//Modal隱藏時清空內容
+				$("#addMemberModal").on("hide.bs.modal", function() {		
+					$("#newMemberName").val("");
+					$("#newMemberNumber").val("");
+					$("#newMemberIdentity").val("general");
+					$("#addMemberMessage").empty();
+				});
+
+				//Modal出現
+				$("#addMemberModal").modal("show");
+			}
+
+			//新增隊員
+			function sendNewMember() {
+				//檢查輸入
+				if($("#newMemberName").val().length==0){
+					$('#addMemberMessage').empty();
+					$('#addMemberMessage').append("請輸入姓名");
+				}
+				else if($("#newMemberNumber").val().length==0){
+					$('#addMemberMessage').empty();
+					$('#addMemberMessage').append("請輸入背號");
+				}
+				else if(parseInt($("#newMemberNumber").val())<0){
+					$('#addMemberMessage').empty();
+					$('#addMemberMessage').append("背號不可小於0");
+				}
+				else if(parseInt($("#newMemberNumber").val())>99){
+					$('#addMemberMessage').empty();
+					$('#addMemberMessage').append("背號不可大於99");
+				}
+				else{
+					//alert($("#newMemberName").val()+$("#newMemberNumber").val()+$("#newMemberIdentity").val());
+					$.ajax({
+						type : "POST",
+						url : "MemberManagementServlet",
+						data : {option : "addMember", name: $("#newMemberName").val(), number: $("#newMemberNumber").val(), identity: $("#newMemberIdentity").val(),},
+						dataType: "text",
+						success : function(response) {
+							getMemberList();
+						},
+						error : function() {
+							console.log("server沒有回應");				
+						}
+					});
+					//隱藏modal
+					$("#addMemberModal").modal("hide");
+				}
+			}
+
+			//刪除隊員
+			function deleteMember(i){
+			//alert(account[i]);
+				if (confirm("若刪除隊員將一併刪除該隊員的比賽數據與訓練日誌等紀錄，確定要刪除嗎？")) {
+		        	$.ajax({
+						type : "POST",
+						url : "MemberManagementServlet",
+						data : {option : "deleteMember", account: account[i]},
+						dataType: "text",
+						success : function(response) {
+							//alert(response);
+							getMemberList();
+						},
+						error : function() {
+							console.log("server沒有回應");				
+						}
+					});
+	    		} 
+	   			else {}
+			}
+
+			//顯示修改身份的Modal
+			function changeIdentity(i){
+				//alert(identity[i]);
+				selectAccount = account[i];
+
+				$("#editIdentityModal").on("hide.bs.modal", function() {		
+					$("#editIdentityMessage").empty();
+				});
+
+				$('#editIdentityMessage').empty();
+				$('#editIdentityMessage').append("修改"+memberName[i]+"的身份");
+				$("#newIdentity").val(identity[i]);
+
+				//Modal出現
+				$("#editIdentityModal").modal("show");
+			}
+
+			function sendNewIdentity() {
+				//alert($("#newIdentity").val());
+				$.ajax({
+					type : "POST",
+					url : "MemberManagementServlet",
+					data : {option : "changeIdentity" ,account:selectAccount, newIdentity: $("#newIdentity").val()},
+					dataType: "text",
+					success : function(response) {							
+							getMemberList();
+					},
+					error : function() {
+						console.log("server沒有回應");				
+					}
+				});
+					//隱藏modal
+				$("#editIdentityModal").modal("hide");
+				selectAccount = "";
+			}
+			
+		</script>
+
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12" >
+						
+				      <div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+				        <div class="panel-heading" id="" style="background-color: #ce5656; color: white; border-radius: 0;">
+				           隊員列表
+				          <button type="button" class="btn btn-default btn-xs" id="" style="float: right;" onclick="addMember();">新增隊員</button>
+				        </div>
+				        <table class="table table-fixed" style="border-color: #ce5656;">
+				          	<thead id="memberListHead">
+				          		<!--------------------------------------------------隊員列表標頭
+					            <tr>
+					                <th class="col-md-2 col-xs-2" style="text-align: center;">姓名</th>
+									<th class="col-md-2 col-xs-2" style="text-align: center;">位置</th>
+									<th class="col-md-2 col-xs-2" style="text-align: center;">身高</th>
+									<th class="col-md-1 col-xs-1" style="text-align: center;">背號</th>
+									<th class="col-md-2 col-xs-2" style="text-align: center;">身份</th>
+									<th class="col-md-3 col-xs-3" style="">帳號</th>
+					            </tr>
+					            ------------------------------------>
+				          	</thead>
+
+				          	<tbody id="memberList">
+					         	<!--------------------------------------------------隊員列表內容
+					            <tr>
+									<td class="col-md-2 col-xs-2" style="border-color: #ce5656;">王小明</td>
+									<td class="col-md-2 col-xs-2" style="border-color: #ce5656;">小前鋒</td>
+									<td class="col-md-2 col-xs-2" style="border-color: #ce5656;">187cm</td>
+									<td class="col-md-2 col-xs-2" style="border-color: #ce5656;">21</td>
+									<td class="col-md-2 col-xs-2" style="border-color: #ce5656;">畢業生</td>
+									<td class="col-md-2 col-xs-2" style="border-color: #ce5656;">
+										NTOUWB0003<button type="button" class="btn btn-default btn-xs" id="" style="float: right;" onclick="">刪除</button>
+									</td>
+					            </tr>
+					           	------------------------------------>	
+				          	</tbody>
+				        </table>
+				      </div>
+
+
+
+						<!--------------------------------------------------list-group
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="" style="background-color: #ce5656; color: white; border-radius: 0;">
+								隊員列表
+								<button type="button" class="btn btn-default btn-xs" id="" style="float: right;" onclick="addMember();">新增隊員</button>
+							</div>
+							<div class="panel-body" id="" style="height: 50vh; overflow-y: auto;">
+								<div class="list-group">								
+									<li class="list-group-item" id="" onclick="" style="border-color: #F5DDDD;">
+										<div class="media">
+											<div class="media-left media-middle">
+												<img src="img/woman.png" class="media-object" style="width: 60px;">
+											</div>
+											<div class="media-body">
+												<h4 class="media-heading" style="font-weight: bold;">21 王小明</h4>
+												<p>小前鋒 187cm <br>身份：畢業生<br>帳號：NTOUWB0003</p>
+
+											</div>
+										</div>
+									</li>						
+								</div>
+								<div class="panel-group" id=""></div>
+							</div>
+						</div>
+						------------------------------------>
+					</div>
+
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+
+		<!-- 新增隊員 modal -->
+		<div id="addMemberModal" class="modal fade" role="dialog">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">新增隊員</h4>
+					</div>
+					<div class="modal-body">
+						
+						<!-- 紅字訊息-->
+						<h6 id="addMemberMessage" style="color: red;"></h6>
+
+						<label>姓名:</label>
+  						<input id="newMemberName" type="text" class="form-control input-sm" style="margin-bottom: 1vh;">
+  						<label>背號:</label>
+  						<input id="newMemberNumber" type="number" min="0" max="99" class="form-control input-sm" style="margin-bottom: 1vh;">
+  						<label>身份:</label>
+	  						<select id="newMemberIdentity" class="form-control input-sm" style="margin-bottom: 1vh;">	    						
+	    						<option value="general">一般</option>
+	    						<option value="leader">隊長</option>
+	    						<option value="graduated">畢業生</option>
+	  						</select>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-darkBlue" data-dismiss="" onclick="sendNewMember();">送出</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 修改身份 modal -->
+		<div id="editIdentityModal" class="modal fade" role="dialog">
+			<div class="modal-dialog modal-sm">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 id="editIdentityMessage" class="modal-title">修改</h4>
+					</div>
+					<div class="modal-body">
+  						<label>身份:</label>
+	  						<select id="newIdentity" class="form-control input-sm" style="margin-bottom: 1vh;">	    						
+	    						<option value="general">一般</option>
+	    						<option value="leader">隊長</option>
+	    						<option value="graduated">畢業生</option>
+	  						</select>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-darkBlue" data-dismiss="" onclick="sendNewIdentity();">儲存</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+	</body>
+</html>

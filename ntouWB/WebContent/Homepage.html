@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+		<script src="js/shooting_examples.js"></script>
+		<script src="js/shooting_preloadjs-NEXT.min.js"></script>
+		<script src="js/shooting_easeljs-NEXT.combined.js"></script>
+
+		
+		<!-- 判斷是否登入 -->
+		<script type="text/javascript">
+			$(document).ready(function(){	
+				$.ajax({
+					type: "POST",
+					url: "http://localhost:8080/ntouWB/LoginServlet",	 
+					data: { option : "getMemberID" },
+					dataType: "text",
+														
+					success : function(response){
+						if(response == "null"){
+							window.location.href='Login.html';
+						}
+					},
+					error : function(){
+						console.log("server沒有回應");
+					}
+				});	
+				init();
+			});
+			
+			var stage, w, h, loader;
+			var sky, player, ground;
+			
+			// loader，把需要載入的圖片放入manifest中，成功載入後呼叫handleCompelete function
+			function init() {
+				examples.showDistractor();
+				stage = new createjs.Stage("shootCanvas");
+
+				// grab canvas width and height for later calculations:
+				w = stage.canvas.width;
+				h = stage.canvas.height;
+
+				// 載入圖片
+				manifest = [
+					{src: "player.png", id: "player"},
+					{src: "sky.png", id: "sky"},
+					{src: "ground.png", id: "ground"},
+				];
+				
+				loader = new createjs.LoadQueue(false);
+				loader.addEventListener("complete", handleComplete); //成功載入事件
+				loader.loadManifest(manifest, true, "img/");
+			}
+
+			function handleComplete() {
+				examples.hideDistractor();
+				
+				// 繪製天空(背景)
+				sky = new createjs.Shape();
+				sky.graphics.beginBitmapFill(loader.getResult("sky")).drawRect(0, 0, w, h);
+				
+				// 繪製地板
+				var groundImg = loader.getResult("ground");
+				ground = new createjs.Shape();
+				ground.graphics.beginBitmapFill(groundImg).drawRect(0, 0, w + groundImg.width, groundImg.height);
+				ground.tileW = groundImg.width;
+				ground.y = h - groundImg.height;
+
+				// 繪製人物
+				var spriteSheet = new createjs.SpriteSheet({
+						framerate: 30, //繪製速率
+						"images": [loader.getResult("player")],
+						"frames": {"regX": -10, "height": 350, "count": 42, "regY": 30, "width": 250},
+						// 設定animations,[從第X張圖片, 到第Y張圖片, 圖片跑完後的下一步動作, 速度(倍率)]
+						"animations": {
+							"run": [0, 11, "run", 0.8],
+							"jump": [12, 41, "run", 0.7]
+						}
+					});
+				player = new createjs.Sprite(spriteSheet, "run");
+				player.y = 35;
+
+				stage.addChild(sky, ground, player); //加入元素到畫面中
+				stage.addEventListener("stagemousedown", handleJumpStart); //滑鼠點擊事件
+
+				createjs.Ticker.timingMode = createjs.Ticker.RAF; //設置循環方式
+				createjs.Ticker.addEventListener("tick", tick);
+			}
+
+			function handleJumpStart() {
+				player.gotoAndPlay("jump");
+			}
+
+			//把畫面中的所有元素分別進行邏輯運算
+			function tick(event) {
+				var deltaS = event.delta / 1000;
+				var position = player.x + 250 * deltaS;
+
+				var playerW = player.getBounds().width * player.scaleX;
+				player.x = (position >= w + playerW) ? -playerW : position;
+
+				ground.x = (ground.x - deltaS * 150) % ground.tileW;
+
+				stage.update(event);
+			}
+		</script>
+		
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<!-- 貼心範例 -->
+					<div class="col-md-12">
+						<center><canvas id="shootCanvas" width="960" height="400" class="img-responsive"></canvas></center>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+
+
+
+	</body>
+</html>

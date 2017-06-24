@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css" />
+		<!-- 表格排序 -->
+		<script type="text/javascript" src="__jquery.tablesorter/jquery-latest.js"></script>
+		<script type="text/javascript" src="__jquery.tablesorter/jquery.tablesorter.js"></script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								比賽場次列表
+							</div>
+							<div class="panel-body">
+								<div class="col-md-12">
+									<table id="teamGameRecordList" class="table table-hover tablesorter" style="border-color: #ce5656;">
+										<thead>
+											<tr>
+												<th style="border-color: #ce5656;">場次</th>
+												<th style="border-color: #ce5656;">日期</th>
+												<th style="border-color: #ce5656;">對手</th>
+												<th style="border-color: #ce5656;">比分</th>
+												<th style="border-color: #ce5656;">結果</th>
+											</tr>
+										</thead>
+										<tbody id="teamGameRecordListTBody"></tbody>
+									</table>
+								</div>
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<!-- 表格排序 -->
+		<script>
+			$(document).ready(function() { 
+				getTeamGameRecordList();
+				/*表格排序*/
+				$("#teamGameRecordList").tablesorter(); 
+			});
+			function getTeamGameRecordList() {
+				/*取得比賽列表*/
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "getTeamGameRecordList"
+					},
+					dataType: "json",
+					success: function(response) {
+						$("#teamGameRecordListTBody").empty();
+						for(var i=0; i<response.length; i++) {
+							$("#teamGameRecordListTBody").append(
+"											<tr onclick='clickTeamGameRecord(\"" + response[i].gameID + "\")'>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].gameID + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].date + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].opponent + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].ourPoint + "：" + response[i].opponentPoint + "</td>" + "\n" + 
+"												<td style='border-color: #ce5656;'>" + response[i].result + "</td>" + "\n" + 
+"											</tr>" + "\n");
+						}
+						/*表格排序*/
+						$("#teamGameRecordList").trigger("update");
+					},
+					error: function() {
+						console.log("getTeamGameRecordList error\n");
+					}
+				});
+			}
+			/*點擊比賽列表*/
+			function clickTeamGameRecord(gameID) {
+				$.ajax({
+					type: "POST",
+					url: "GameRecordServlet",
+					data: {
+						option: "clickTeamGameRecord",
+						clickedGameID: gameID
+					},
+					dataType: "text",
+					success: function(response) {
+						location.href = "TeamGameRecord.html";
+					},
+					error: function() {
+						console.log("clickTeamGameRecord error\n");
+					}
+				});
+			}
+		</script>
+	</body>
+</html>

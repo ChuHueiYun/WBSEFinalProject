@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+		<style>
+			#returnButton:hover {
+				color: #f0f0f0;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12">
+						<div class="panel panel-default" style="border-color: #ce5656; border-radius: 0;">
+							<div class="panel-heading" id="listHeading" style="background-color: #ce5656; color: white; border-radius: 0;">
+								<div class="row">
+									<div class="col-md-9 col-sm-9 col-xs-6">
+										<button type="button" class="btn" id="returnButton" style="background-color: rgba(0, 0, 0, 0); padding-left: 0;" title="返回列表" onclick="location.href='TrainingLog.html'">
+											<span class="glyphicon glyphicon-chevron-left" style="font-size: 1.5em;"></span>
+										</button>
+										<span id="listName" style="vertical-align: middle;">陳文欣 的訓練日誌</span>
+									</div>
+									<div class="col-md-3 col-sm-3 col-xs-6">
+										<select class="form-control input-sm" id="memberSelect" onChange="memberListChange();">
+											<option value="">小山豬</option>
+											<option value="" selected>陳文欣</option>
+											<option value="">涂道純</option>
+										</select>
+									</div>
+								</div>
+							</div>
+							<div class="panel-body">
+								<div class="panel-group" id="TLList"></div>
+							</div>
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		<!-- 回覆訓練日誌 modal -->
+		<div id="newTrainingLogModal" class="modal fade" role="dialog">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">回覆訓練日誌</h4>
+					</div>
+					<div class="modal-body">
+						<label>回覆內容</label>
+						<textarea class="form-control" rows="5" id="replyTrainingLogContent"></textarea>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-darkBlue" data-dismiss="modal" onclick="replyTrainingLog();">送出</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+		<script>
+			$(document).ready(function() {
+				checkIdentity();
+			});
+			/*確認身份*/
+			function checkIdentity() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "checkIdentity"
+					},
+					dataType: "text",
+					success: function(response) {
+						if(response == "coach") {
+							updateMemberTrainingLog();
+						}
+						else {
+							location.href = "TrainingLog.html";
+						}
+					},
+					error: function() {
+						console.log("checkIdentity error\n");
+					}
+				});
+			}
+			/*取得某隊員訓練日誌(coach)*/
+			function updateMemberTrainingLog() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "getMemberTrainingLog"
+					},
+					dataType: "json",
+					success: function(response) {
+						$("#listName").html(response.MName + "&nbsp的訓練日誌");
+						$("#memberSelect").empty();
+						for(var i=0; i<response.ML.length; i++) {
+							if(response.ML[i].name == response.MName) {
+								$("#memberSelect").append("<option value='m" + response.ML[i].memberID + "' selected>" + response.ML[i].name + "</option>");
+							}
+							else {
+								$("#memberSelect").append("<option value='m" + response.ML[i].memberID + "'>" + response.ML[i].name + "</option>");
+							}
+						}
+						$("#TLList").empty();
+						if(response.MTL.length == 0) {
+							$("#TLList").append("此球員無訓練日誌");
+						}
+						for(var i=0; i<response.MTL.length; i++) {
+							if(response.MTL[i].replyer != null) {
+								$("#TLList").append(
+"									<div class='panel panel-default' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='panel-heading' data-toggle='collapse' data-target='#d" + response.MTL[i].diaryID + "' style='cursor: pointer; background-color: #F5DDDD;'>" + "\n" + 
+"											<div class='media'>" + "\n" + 
+"												<div class='media-left media-middle'>" + "\n" + 
+"													<img src='img/basketball.png' class='media-object' style='width: 20px;'>" + "\n" + 
+"												</div>" + "\n" + 
+"												<div class='media-body'>" + "\n" + 
+"													<h4 class='media-heading' style='margin: 0;'>" + response.MTL[i].date + "\n" + 
+"														<span class='label label-default' style='float: right; background-color: #ce5656;'>已回覆</span>" + "\n" + 
+"													</h4>" + "\n" + 
+"												</div>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"										<div id='d" + response.MTL[i].diaryID + "' class='panel-collapse collapse'>" + "\n" + 
+"											<div class='panel-body' style='white-space: pre-line'>" + response.MTL[i].content + "</div>" + "\n" + 
+"											<hr  style='margin: 1vh;' />" + "\n" + 
+"											<div class='panel-footer' style='background-color: white;'>" + "\n" + 
+"												<div class='media'>" + "\n" + 
+"													<div class='media-left'>" + "\n" + 
+"														<img src='img/boss.png' class='media-object' style='width: 60px;'>" + "\n" + 
+"													</div>" + "\n" + 
+"													<div class='media-body'>" + "\n" + 
+"														<h4 class='media-heading' style='font-weight: bold;'>" + response.MTL[i].replyerName + "</h4>" + "\n" + 
+"														<h6>2017-06-02 15:55</h6>" + "\n" + 
+"														<p style='white-space: pre-line'>" + response.MTL[i].reply + "</p>" + "\n" + 
+"													</div>" + "\n" + 
+"												</div>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</div>" + "\n");
+							}
+							else {
+								$("#TLList").append(
+"									<div class='panel panel-default' style='border-color: #F5DDDD;'>" + "\n" + 
+"										<div class='panel-heading' data-toggle='collapse' data-target='#d" + response.MTL[i].diaryID + "' style='cursor: pointer; background-color: #F5DDDD;'>" + "\n" + 
+"											<div class='media'>" + "\n" + 
+"												<div class='media-left media-middle'>" + "\n" + 
+"													<img src='img/basketball.png' class='media-object' style='width: 20px;'>" + "\n" + 
+"												</div>" + "\n" + 
+"												<div class='media-body'>" + "\n" + 
+"													<h4 class='media-heading' style='margin: 0;'>" + "\n" + 
+"														" + response.MTL[i].date + "\n" + 
+"														<button type='button' class='btn btn-default btn-xs' style='float: right;' onclick='newTrainingLog(\"" + response.MTL[i].diaryID + "\");'>回覆</button>" + "\n" + 
+"													</h4>" + "\n" + 
+"												</div>" + "\n" + 
+"											</div>" + "\n" + 
+"										</div>" + "\n" + 
+"										<div id='d" + response.MTL[i].diaryID + "' class='panel-collapse collapse'>" + "\n" + 
+"											<div class='panel-body' style='white-space: pre-line'>" + response.MTL[i].content + "</div>" + "\n" + 
+"										</div>" + "\n" + 
+"									</div>" + "\n");
+							}
+							$("div#TLList > div.panel:first > div.panel-collapse").addClass("in");
+						}
+					},
+					error: function(xhr, ajaxOptions, thrownError) {
+						console.log("updateMemberTrainingLog error\n" + xhr.status + "\n" + thrownError);
+					}
+				});
+			}
+			/*回覆訓練日誌(coach)*/
+			function newTrainingLog(diaryID) {
+				localStorage.setItem("diaryID", diaryID);
+				$("#newTrainingLogModal").modal("show");
+			}
+			/*回覆訓練日誌(coach)*/
+			function replyTrainingLog() {
+				$.ajax({
+					type: "POST",
+					url: "TrainingLogServlet",
+					data: {
+						option: "replyTrainingLog",
+						diaryID: localStorage.getItem("diaryID"),
+						replyTrainingLogContent: $("#replyTrainingLogContent").val()
+					},
+					dataType: "text",
+					success: function(response) {
+						localStorage.removeItem("diaryID");
+						updateMemberTrainingLog();
+					},
+					error: function() {
+						console.log("replyTrainingLog error\n");
+					}
+				});
+			}
+			/*隊員列表選單*/
+			function memberListChange() {
+				$("#memberSelect > option:selected").each(function() {
+					$.ajax({
+						type: "POST",
+						url: "TrainingLogServlet",
+						data: {
+							option: "clickMemberTrainingLog",
+							clickedMemberID: $("#memberSelect").val().substring(1)
+						},
+						dataType: "text",
+						success: function(response) {
+							updateMemberTrainingLog();
+						},
+						error: function() {
+							console.log("clickMemberTrainingLog error\n");
+						}
+					});
+				});
+			}
+		</script>
+	</body>
+</html>

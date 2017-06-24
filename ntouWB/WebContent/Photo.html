@@ -1,0 +1,226 @@
+﻿<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<style>
+			.canvas-box{width: 480px; height: 300px; position: relative;-webkit-user-select:none;-moz-user-select:none;-o-user-select:none;user-select:none }
+			.canvas-box .overlay{ position: absolute; left: 0; top: 0; cursor: move;border:1px solid #69f;}
+			.canvas-box div,.canvas-box canvas{-webkit-user-select:none;-moz-user-select:none;-o-user-select:none;user-select:none}
+			.pic{
+			overflow: hidden;
+			}
+			.pic img{
+			-webkit-transform: scale(0.9);
+			-webkit-transition: 1s;}
+			.pic img:hover{
+			cursor: pointer;
+			-webkit-transform: scale(1.0);
+			}
+
+		</style>		
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+		
+
+		<script type="text/javascript">
+			$(document).ready(function(){	
+				$.ajax({
+					type: "POST",
+					url: "http://localhost:8080/ntouWB/LoginServlet",	 
+					data: { option : "getMemberID" },
+					dataType: "text",
+														
+					success : function(response){
+						if(response == "null"){
+							window.location.href='Login.html';
+						}
+					},
+					error : function(){
+						console.log("server沒有回應");
+					}
+				});	
+			});
+		</script>
+
+		
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-2"></div>
+			<div class="col-md-8">
+				<div class="row" id="title"></div>
+				<div class="row" id="menu"></div>
+				<div class="row">
+				<!-- 內容 -->
+<!-- ==================================================================================================================================== -->
+					<div class="col-md-12"><button type="button" class="btn btn-darkBlue"data-toggle="modal" data-target="#myModal" style="float: right;">上傳圖片</button>
+					</div>
+					<div class="col-md-12">
+						<div id = "picturePool">					
+						</div>
+					</div>
+<!-- ==================================================================================================================================== -->
+				</div>
+			</div>
+			<div class="col-md-2"></div>
+		</div>
+		
+		<!-- 框架 -->
+		<script src="js/frame.js"></script>
+
+	　  <!-- Modal -->
+ 　		<div class="modal fade" id="myModal" role="dialog">
+			<div class="modal-dialog">
+	
+			<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<h4 class="modal-title">上傳相片</h4><br>
+						<div><input type='text' class='form-control' style='width:65%;display:inline;vertical-align:middle;' id='name'placeholder='請輸入相片描述'>&nbsp;<input type='date' class='form-control' style='width:30%;display:inline;	vertical-align:middle;' id='dateTime'placeholder='請選擇日期'></div>
+					</div>
+					<div class="modal-body">
+						<input class="btn btn-xs" type="file" id="ipt" accept="image/jpeg,image/png" value="選擇相片">
+						<br>							
+						<div class="canvas-box"></div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-darkBlue" id="save">送出</button>
+					</div>
+				</div>
+	  
+			</div>
+		</div>
+		
+		<div class="modal fade" id="viewModal" role="dialog">
+			<div class="modal-dialog">
+	
+			<!-- Modal content-->
+				<div class="modal-content">
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal">&times;</button>
+						<div id= "imageModelTital">
+							
+						</div>
+					</div>
+					<div class="modal-body">
+						<div id = "pictureView"></div>
+					</div>
+					<div class="modal-footer">
+						<button class="btn btn-default btn-xs" onclick='editPic()'>編輯</button>
+					</div>
+				</div>
+	  
+			</div>
+		</div>
+	
+	<!-- canvas -->
+	<script src="js/zm-canvas-crop.js"></script>
+	<script>
+		var nowSelect = -1;
+		
+		$(document).ready(function() {
+			$.ajax({
+				url : "ImageServlet",
+				data : {
+					state : "getTotalPictureID",
+				},
+				type: "post",
+				dataType : "json",
+				
+				success : function(response) {
+					showPictureList(response);
+				},
+				error : function() {
+					console.log("錯誤訊息");
+				}
+			});
+		});
+		
+		function showPictureList(response){
+			for(var i = response.length-1; i>0; i-=2){ 
+				pictureID = response[i-1];
+				pictureBase = response[i];
+				var temp="";
+				temp+="<div class = 'col-md-3 pic' id = 'pictureID'><img class='img-rounded' src='"+pictureBase+"' width='100%' style='margin-top: 10px' onclick='clickPicture(\""+pictureID+"\")' data-toggle='modal' data-target='#viewModal'></div>";
+				$("#picturePool").append(temp);
+
+			}
+		}
+		
+		function clickPicture(i){
+			nowSelect = i;
+			$.ajax({
+				url : "ImageServlet",
+				data : {
+					state : "getPicture",
+					id : i
+				},
+				type: "post",
+				dataType : "json",
+				
+				success : function(response) {
+					$("#imageModelTital").empty();
+					$("#pictureView").empty();
+					$("#imageModelTital").append("<h4 class='modal-title'>"+response[0]+"</h4><br><p>"+response[1]+"</p>");
+					$("#pictureView").append("<img class='img-rounded' src='"+response[2]+"' width='100%'>");
+				},
+				error : function() {
+					console.log("錯誤訊息");
+				}
+			});		
+		
+		
+		}
+		
+		function editPic(){
+			location.href="EditPhoto.html?Img="+nowSelect;	
+		}
+	
+		function saveCallBack(base64) {
+			if(base64 !="noSelect"){
+				if($("#name").val()){
+					$('#name').css('border-color', '');
+					$('#name').css('border-width', '');
+					if($("#dateTime").val()){
+						$('#dateTime').css('border-color', '');
+						$('#dateTime').css('border-width', '');
+						$.ajax({
+							url: "ImageServlet",
+							type: "post",
+							data: { 
+								state : "UploadPicture",
+								pictureName: $("#name").val(),
+								dateTime: $("#dateTime").val(),
+								base64: base64 
+							},
+							success: function (response) {
+								window.location.reload();
+							}, error: function (e) {
+								alert(e.responseText); //alert錯誤訊息
+							}
+						});
+					}else {$("#dateTime").css("border-color", "red");$("#dateTime").css("border-width", "1.5px");}
+				}else {$("#name").css("border-color", "red");$("#name").css("border-width", "1.5px");$('#dateTime').css('border-color', '');$('#dateTime').css('border-width', '');}
+			}else{alert("請選擇照片");}
+		}
+
+		var c = new ZmCanvasCrop({
+						fileInput: $('#ipt')[0],  
+						saveBtn: $('#save')[0],
+						box_width: 480,  //剪裁容器的最大寬度
+						box_height: 300, //剪裁容器的最大高度
+						min_width: 476.8,  //要剪裁图片的最小宽度 596
+						min_height: 296  //要剪裁图片的最小高度 370
+					}, saveCallBack);
+		
+	</script>
+
+	</body>
+	
+</html>

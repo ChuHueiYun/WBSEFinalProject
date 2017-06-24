@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8"> 
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>NTOUWB</title>
+		<link rel="Shortcut Icon" type="image/x-icon" href="img/icon.ico">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/frame.css">
+
+		<script type="text/javascript">
+			var serverURL = "http://localhost:8080/ntouWB/LoginServlet";
+
+			//判斷是否已登入
+			$(document).ready(function(){
+				$.ajax({
+					type: "POST",
+					url: serverURL,	 
+					data: { option : "getMemberID" },
+					dataType: "text",
+																		
+					success : function(response){
+						if(response != "null"){
+							window.location.href='Homepage.html';
+						}
+					},
+					error : function(){
+						console.log("server沒有回應");
+					}
+				});	
+			});
+
+			
+			function login(){
+				if($('#account').val().length == 0){
+					$('#loginMessage').empty();
+					$('#loginMessage').append("請輸入帳號");
+				}
+				else if($('#password').val().length == 0){
+					$('#loginMessage').empty();
+					$('#loginMessage').append("請輸入密碼");
+				}
+				else{
+					$.ajax({
+						type: "POST",
+						url: serverURL,	 
+						data: {account:$('#account').val() ,password:$('#password').val(), option:"login"},
+						dataType: "text",
+															
+						success : function(response){
+							if(response == "登入成功"){
+								$('#loginMessage').empty();
+								window.location.href='Homepage.html';
+							}
+							else{
+								$('#loginMessage').empty();
+								$('#loginMessage').append(response);
+								
+							}
+						},
+						error : function(){
+							console.log("server沒有回應");
+						}
+					});
+				}
+			}
+		</script>
+	</head>
+	<body>
+		<div class="container-fluid">
+			<div class="col-md-4"></div>
+			<div class="col-md-4" style="padding-left: 5vw; padding-right: 5vw;">
+				<div class="row" style="margin-top: 5vh; margin-bottom: 5vh;">
+					<center><img src = "img/mark.png" class="img-responsive"></img></center>
+				</div>
+				<div class="row">
+					<center><h1 style="font-weight: bold; color: #2e2d4d;">NTOU WB</h1></center>
+					<center><h2 style="font-weight: bold; color: #2e2d4d;">登入</h2></center>
+				</div>
+				<div class="row" style="margin-top: 4vh;">
+					<!-- 紅字訊息，ex: 帳密輸入錯誤 -->
+					<h6 id="loginMessage" style="color: red;"></h6>
+				</div>
+				<div class="row" style="margin-top: 2vh;">
+					<center><input id="account" type="text" class="form-control" placeholder="帳號" /></center>
+				</div>
+				<div class="row" style="margin-top: 2vh;">
+					<center><input id="password" type="password" class="form-control" placeholder="密碼" /></center>
+				</div>
+				<div class="row" style="margin-top: 4vh;">
+					<center><button type="button" class="btn btn-darkBlue" onclick="login()">登入</button></center>
+				</div>
+			</div>
+			<div class="col-md-4"></div>
+		</div>
+	</body>
+</html>
