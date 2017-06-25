@@ -3,7 +3,7 @@ var isCoach = false;
 $(document).ready(function(){
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:8080/ntouWB/LoginServlet",	 
+		url: "LoginServlet",	 
 		data: { option : "getIdentity" },
 		dataType: "text",
 															

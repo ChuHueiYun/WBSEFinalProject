@@ -80,7 +80,7 @@ $(document).ready(function() {
 
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:8080/ntouWB/LoginServlet",	 
+		url: "LoginServlet",	 
 		data: { option : "getIdentity" },
 		dataType: "text",
 															
@@ -101,7 +101,7 @@ $(document).ready(function() {
 function logout(){
 	$.ajax({
 		type: "POST",
-		url: "http://localhost:8080/ntouWB/LoginServlet",	 
+		url: "LoginServlet",	 
 		data: { option : "logout" },
 		dataType: "text",
 															
